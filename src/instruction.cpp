@@ -1,0 +1,66 @@
+#include "instruction.hpp"
+#include <iostream>
+
+Instruction::Instruction(uint32_t code) : M_Code(code) {
+    decode();
+}
+
+void Instruction::decode() {
+    uint32_t opcode_mask = 0x7F;  // Last 7 bits (bits 0-6)
+    uint32_t rd_mask = 0xF80;     // Bits 7-11
+    uint32_t funct3_mask = 0x7000; // Bits 12-14
+    uint32_t rs1_mask = 0xF8000;  // Bits 15-19
+    uint32_t rs2_mask = 0x1F00000; // Bits 20-24
+    uint32_t funct7_mask = 0xFE000000; // Bits 25-31
+    uint32_t imm_mask = 0xFFF00000; // Immediate for I-type (bits 20-31)
+
+    rd = (M_Code & rd_mask) >> 7;
+    funct3 = (M_Code & funct3_mask) >> 12;
+    rs1 = (M_Code & rs1_mask) >> 15;
+    rs2 = (M_Code & rs2_mask) >> 20;
+    funct7 = (M_Code & funct7_mask) >> 25;
+
+    uint32_t opcode_num = M_Code & opcode_mask;
+    switch (opcode_num) {
+        case 0x33: // R-type
+            if (funct3 == 0x0 && funct7 == 0x00) opcode = "ADD";
+            else if (funct3 == 0x0 && funct7 == 0x20) opcode = "SUB";
+            else if (funct3 == 0x7) opcode = "AND";
+            else if (funct3 == 0x6) opcode = "OR";
+            else if (funct3 == 0x4) opcode = "XOR";
+            break;
+        
+        case 0x13: // I-type (ADDI, ANDI, ORI)
+            imm = (M_Code & imm_mask) >> 20;
+            if (funct3 == 0x0) opcode = "ADDI";
+            else if (funct3 == 0x7) opcode = "ANDI";
+            else if (funct3 == 0x6) opcode = "ORI";
+            break;
+
+        case 0x03: // Load
+            imm = (M_Code & imm_mask) >> 20;
+            if (funct3 == 0x0) opcode = "LB";
+            else if (funct3 == 0x2) opcode = "LW";
+            break;
+
+        case 0x23: // Store
+            imm = ((M_Code >> 7) & 0x1F) | ((M_Code >> 25) << 5);
+            if (funct3 == 0x0) opcode = "SB";
+            else if (funct3 == 0x2) opcode = "SW";
+            break;
+
+        case 0x63: // Branch
+            imm = ((M_Code >> 8) & 0xF) | ((M_Code >> 25) << 4);
+            if (funct3 == 0x0) opcode = "BEQ";
+            else if (funct3 == 0x1) opcode = "BNE";
+            break;
+
+        default:
+            opcode = "UNKNOWN";
+            break;
+    }
+    
+    std::cout << "Decoded: " << opcode << " rd: " << rd << " rs1: " << rs1 
+              << " rs2: " << rs2 << " funct3: " << funct3 
+              << " funct7: " << funct7 << " imm: " << imm << std::endl;
+}
