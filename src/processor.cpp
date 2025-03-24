@@ -24,8 +24,12 @@ void Processor::decode() {
     id_ex.pc = if_id.pc;
     id_ex.opcode = if_id.instr.opcode;
     id_ex.rd = if_id.instr.rd;
+    id_ex.rs1 = if_id.instr.rs1;
+    id_ex.rs2 = if_id.instr.rs2;
+    std::cout << "rs1: " << id_ex.rs1 << " rs2: " << id_ex.rs2 << std::endl;
     id_ex.regVal1 = registers[if_id.instr.rs1];
     id_ex.regVal2 = registers[if_id.instr.rs2];
+    std::cout << "regVal1: " << id_ex.regVal1 << " regVal2: " << id_ex.regVal2 << std::endl;
     id_ex.imm = if_id.instr.imm;
     id_ex.funct3 = if_id.instr.funct3;
     id_ex.funct7 = if_id.instr.funct7;
@@ -33,7 +37,16 @@ void Processor::decode() {
     std::cout << "[ID] Decoding instruction: " << id_ex.opcode << " rs1: " << id_ex.regVal1 
               << " rs2: " << id_ex.regVal2 << " rd: " << id_ex.rd << " imm: " << id_ex.imm << std::endl;
 
-    id_ex.ALUSrc = (id_ex.opcode == "ADDI" || id_ex.opcode == "LW");
+    if (id_ex.opcode == "ADD" || id_ex.opcode == "SUB") {
+        id_ex.ALUOp = 0b10;
+    } else if ( id_ex.opcode == "LW" || id_ex.opcode == "SW" ) {
+        id_ex.ALUOp = 0b00;
+    } else if (id_ex.opcode == "ADDI") {
+        id_ex.ALUOp = 0b11;
+    } else if ( id_ex.opcode == "BEQ" || id_ex.opcode == "BNE" ) {
+        id_ex.ALUOp = 0b01;
+    }
+    id_ex.ALUSrc = (id_ex.opcode == "ADDI" || id_ex.opcode == "LW" || id_ex.opcode == "SW");
     id_ex.Branch = (id_ex.opcode == "BEQ" || id_ex.opcode == "BNE");
     id_ex.MemRead = (id_ex.opcode == "LW");
     id_ex.MemWrite = (id_ex.opcode == "SW");
@@ -42,7 +55,7 @@ void Processor::decode() {
 }
 
 void Processor::execute() {
-    ex_mem.pc_imm = id_ex.pc + id_ex.imm;
+    ex_mem.pc_imm = id_ex.pc + (id_ex.imm << 1);
     ex_mem.rd = id_ex.rd;
 
     if (id_ex.opcode == "ADD") {
@@ -71,6 +84,9 @@ void Processor::memoryAccess() {
     } else if (ex_mem.MemWrite) {
         memory[ex_mem.aluResult / 4] = ex_mem.regVal2;
         std::cout << "[MEM] Stored data in memory: " << ex_mem.regVal2 << std::endl;
+    }
+    else {
+        std::cout << "[MEM] No memory operation" << std::endl;
     }
 
     mem_wb.aluResult = ex_mem.aluResult;

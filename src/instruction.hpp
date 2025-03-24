@@ -8,7 +8,7 @@ struct Instruction {
     std::string opcode;   //string for storing opcode
     int rd;  //destination register
     int rs1, rs2;   //source registers
-    int imm;  //immediate value 
+    int64_t imm;  //immediate value 
     int funct3, funct7; //function codes         
     int cycleEntered[5]; //For tracking the cycle entered in each stage
 

@@ -11,26 +11,32 @@ public:
     void loadProgram(const std::vector<uint32_t>& program);
     void run();
 
-private:
+    virtual void fetch();
+    virtual void decode();
+    virtual void execute();
+    virtual void memoryAccess();
+    virtual void writeBack();
+
     uint32_t registers[32];
-    uint32_t pc;
+    uint64_t pc;
     std::vector<uint32_t> memory;
 
     struct IF_ID {
-        uint32_t pc;
+        uint64_t pc;
         Instruction instr;
     } if_id;
 
     struct ID_EX {
-        uint32_t pc;
+        uint64_t pc;
         std::string opcode;
         int rd;
         int64_t imm;
+        int rs1,rs2;
         int funct3, funct7;
         int regVal1, regVal2;
 
         bool ALUSrc;
-        uint8_t ALUOp;
+        uint8_t ALUOp :2;
         bool Branch;
         bool MemRead;
         bool MemWrite;
@@ -39,7 +45,7 @@ private:
     } id_ex;
 
     struct EX_MEM {
-        uint32_t pc_imm;
+        uint64_t pc_imm;
         uint32_t aluResult;
         uint32_t regVal2;
         int rd;
@@ -61,11 +67,7 @@ private:
         bool MemToReg;
     } mem_wb;
 
-    void fetch();
-    void decode();
-    void execute();
-    void memoryAccess();
-    void writeBack();
+
      
     Processor(bool enableForwarding);
 };

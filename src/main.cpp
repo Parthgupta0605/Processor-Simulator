@@ -1,15 +1,32 @@
 #include "processor.hpp"
+#include "forwarding.hpp"
+#include "pipeline.hpp"
 #include <vector>
 #include <iostream>
 
 int main() {
-    Processor cpu;
-    
-    // Sample program: ADD x3, x1, x2; SUB x4, x1, x2
-    std::vector<uint32_t> program = {0x002081B3, 0x402081B3};  
-    cpu.loadProgram(program);
+    // Example program (machine code instructions)
+    std::vector<uint32_t> program = {
+        // 0x00100093, // ADDI x1, x0, 1
+        // 0x00208113, // ADDI x2, x1, 2
+        0x002101B3, // ADD x3, x2, x2
+        0x00410233  // ADD x4, x2, x4
+    };
 
-    cpu.run();
+    // Initialize processor without forwarding
+    std::cout << "Simulating Processor without forwarding:" << std::endl;
+    Processor processor;
+    initializePipeline(processor);
+    std::cout << "Pipeline Initialized" << std::endl;
+    processor.loadProgram(program);
+    simulatePipeline(processor);
+
+    // Initialize processor with forwarding
+    std::cout << "\nSimulating Processor with forwarding:" << std::endl;
+    ForwardingProcessor forwardingProcessor;
+    initializePipeline(forwardingProcessor);
+    forwardingProcessor.loadProgram(program);
+    simulatePipeline(forwardingProcessor);
 
     return 0;
 }

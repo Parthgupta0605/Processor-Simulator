@@ -33,7 +33,7 @@ void Instruction::decode() {
             rd = (M_Code & rd_mask) >> 7;
             funct3 = (M_Code & funct3_mask) >> 12;
             rs1 = (M_Code & rs1_mask) >> 15;
-            imm = static_cast<int32_t>(M_Code) >> 20; 
+            imm = static_cast<int64_t>(M_Code) >> 20; 
             if (funct3 == 0x0) opcode = "ADDI";
             else if (funct3 == 0x7) opcode = "ANDI";
             else if (funct3 == 0x6) opcode = "ORI";
@@ -43,7 +43,7 @@ void Instruction::decode() {
             rd = (M_Code & rd_mask) >> 7;
             funct3 = (M_Code & funct3_mask) >> 12;
             rs1 = (M_Code & rs1_mask) >> 15;
-            imm = static_cast<int32_t>(M_Code) >> 20;
+            imm = static_cast<int64_t>(M_Code) >> 20;
             if (funct3 == 0x0) opcode = "LB";
             else if (funct3 == 0x2) opcode = "LW";
             break;
@@ -52,7 +52,7 @@ void Instruction::decode() {
             funct3 = (M_Code & funct3_mask) >> 12;
             rs1 = (M_Code & rs1_mask) >> 15;
             rs2 = (M_Code & rs2_mask) >> 20;
-            imm = static_cast<int32_t>(((M_Code >> 7) & 0x1F) | ((M_Code >> 25) << 5));
+            imm = static_cast<int64_t>(((M_Code >> 7) & 0x1F) | ((M_Code >> 25) << 5));
             if (funct3 == 0x0) opcode = "SB";
             else if (funct3 == 0x2) opcode = "SW";
             break;
@@ -61,7 +61,7 @@ void Instruction::decode() {
             funct3 = (M_Code & funct3_mask) >> 12;
             rs1 = (M_Code & rs1_mask) >> 15;
             rs2 = (M_Code & rs2_mask) >> 20;
-            imm = static_cast<int32_t>(((M_Code >> 7) & 0x1E) | ((M_Code >> 20) & 0x7E0) |
+            imm = static_cast<int64_t>(((M_Code >> 7) & 0x1E) | ((M_Code >> 20) & 0x7E0) |
                                         ((M_Code >> 25) & 0xFE0) | ((M_Code >> 31) << 12)); 
             imm = imm << 19 >> 19;
             if (funct3 == 0x0) opcode = "BEQ";
@@ -70,7 +70,7 @@ void Instruction::decode() {
 
         case 0x6F: // JAL (J-Type)
             rd = (M_Code & rd_mask) >> 7;
-            imm = static_cast<int32_t>(((M_Code >> 12) & 0xFF) | ((M_Code >> 20) & 0x1) << 11 |
+            imm = static_cast<int64_t>(((M_Code >> 12) & 0xFF) | ((M_Code >> 20) & 0x1) << 11 |
                                         ((M_Code >> 21) & 0x3FF) << 1 | ((M_Code >> 31) << 20));
             imm = imm << 11 >> 11;
             opcode = "JAL";
@@ -80,7 +80,7 @@ void Instruction::decode() {
             rd = (M_Code & rd_mask) >> 7;
             funct3 = (M_Code & funct3_mask) >> 12;
             rs1 = (M_Code & rs1_mask) >> 15;
-            imm = static_cast<int32_t>(M_Code) >> 20;
+            imm = static_cast<int64_t>(M_Code) >> 20;
             opcode = "JALR";
             break;
 
