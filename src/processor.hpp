@@ -66,6 +66,8 @@ private:
     void execute();
     void memoryAccess();
     void writeBack();
+     
+    Processor(bool enableForwarding);
 };
 
 #endif
