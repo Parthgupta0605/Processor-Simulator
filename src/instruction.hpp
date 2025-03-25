@@ -12,7 +12,7 @@ struct Instruction {
     int funct3, funct7; //function codes         
     int cycleEntered[5]; //For tracking the cycle entered in each stage
 
-    Instruction() : M_Code(0), opcode("NOP"), rd(0), rs1(0), rs2(0), imm(0), funct3(0), funct7(0) {
+    Instruction() : M_Code(0), opcode("NOP"), rd(0), rs1(0), rs2(0), imm(0), funct3(-1), funct7(-1) {
         for (int i = 0; i < 5; i++) cycleEntered[i] = 0;
     }
     Instruction(uint32_t code); 

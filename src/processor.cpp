@@ -12,11 +12,19 @@ void Processor::loadProgram(const std::vector<uint32_t>& program) {
     memory = program;
 }
 
+void Processor::PC_calculation() {
+    if (entry.PCsrc == 1) {  
+        pc = entry.PC2;  
+        if_id.instr = Instruction();  
+    }
+}
+
 void Processor::fetch() {
     if_id.pc = pc;
     if_id.instr = Instruction(memory[pc / 4]);
     std::cout << "[IF] Fetching instruction at PC: " << pc << std::endl;
     pc += 4;
+    entry.PC1 = pc;
 }
 
 void Processor::decode() {
@@ -47,26 +55,91 @@ void Processor::decode() {
         id_ex.ALUOp = 0b01;
     }
     id_ex.ALUSrc = (id_ex.opcode == "ADDI" || id_ex.opcode == "LW" || id_ex.opcode == "SW");
-    id_ex.Branch = (id_ex.opcode == "BEQ" || id_ex.opcode == "BNE");
+
+    id_ex.Branch = (id_ex.opcode == "BEQ" || id_ex.opcode == "BNE" || id_ex.opcode == "BLT" || id_ex.opcode == "BGE");
     id_ex.MemRead = (id_ex.opcode == "LW");
     id_ex.MemWrite = (id_ex.opcode == "SW");
     id_ex.RegWrite = (id_ex.opcode == "ADD" || id_ex.opcode == "SUB" || id_ex.opcode == "ADDI" || id_ex.opcode == "LW");
     id_ex.MemToReg = (id_ex.opcode == "LW");
+
+    bool branchTaken = false;
+    if (id_ex.Branch) {
+        if (id_ex.opcode == "BEQ") {
+            branchTaken = (id_ex.regVal1 == id_ex.regVal2);
+        } else if (id_ex.opcode == "BNE") {
+            branchTaken = (id_ex.regVal1 != id_ex.regVal2);
+        } else if (id_ex.opcode == "BLT") {
+            branchTaken = (id_ex.regVal1 < id_ex.regVal2);
+        } else if (id_ex.opcode == "BGE") {
+            branchTaken = (id_ex.regVal1 >= id_ex.regVal2);
+        }
+    }
+
+    if (branchTaken) {
+        entry.PCsrc = 1;
+        entry.PC2 = id_ex.pc + (id_ex.imm << 1); // PC + offset
+    } else {
+        entry.PCsrc = 0;
+    }
+}
+
+int64_t Processor::performALUOperation(int ALUOp, int64_t operand1, int64_t operand2, int funct3, int funct7) {
+    switch (ALUOp) {
+        case 0b00:  // Load/Store (address calculation)
+            return operand1 + operand2;
+
+        case 0b01:  // Branch comparison
+            if (funct3 == 0b000) return (operand1 == operand2) ? 1: 0; // BEQ
+            if (funct3 == 0b001) return (operand1 != operand2) ? 1: 0; // BNE
+            if (funct3 == 0b100) return (operand1 < operand2) ? 1 : 0; // BLT
+            if (funct3 == 0b101) return (operand1 >= operand2) ? 1 : 0; // BGE
+            if (funct3 == 0b110) return ((uint64_t)operand1 < (uint64_t)operand2) ? 1 : 0; // BLTU
+            if (funct3 == 0b111) return ((uint64_t)operand1 >= (uint64_t)operand2) ? 1 : 0; // BGEU
+            break;
+
+        case 0b10:  // R-type ALU operations
+            if (funct3 == 0b000) {
+                return (funct7 == 0b0100000) ? operand1 - operand2 : operand1 + operand2; // SUB if funct7=0x20, else ADD
+            }
+            if (funct3 == 0b111) return operand1 & operand2;  // AND
+            if (funct3 == 0b110) return operand1 | operand2;  // OR
+            if (funct3 == 0b100) return operand1 ^ operand2;  // XOR
+            if (funct3 == 0b001) return operand1 << operand2;  // SLL
+            if (funct3 == 0b101) {
+                return (funct7 == 0b0100000) ? operand1 >> operand2 : (uint64_t)operand1 >> operand2; // SRA if funct7=0x20, else SRL
+            }
+            if (funct3 == 0b010) return (operand1 < operand2) ? 1 : 0;  // SLT
+            if (funct3 == 0b011) return ((uint64_t)operand1 < (uint64_t)operand2) ? 1 : 0;  // SLTU
+            break;
+
+        case 0b11:  // Special cases (Jumps, LUI, AUIPC)
+            if (funct3 == 0b000) {  // JALR
+                return (operand1 + operand2) & ~1;
+            }
+            if (funct3 == -1) {  // LUI, AUIPC have no funct3
+                if (funct7 == 0b0000000) return operand2 << 12; // LUI
+                if (funct7 == 0b0000001) return operand1 + (operand2 << 12); // AUIPC
+            }
+            break;
+
+        default:
+            std::cerr << "Unknown ALUOp: " << ALUOp << std::endl;
+            return 0;
+    }
+    return 0;
 }
 
 void Processor::execute() {
     ex_mem.pc_imm = id_ex.pc + (id_ex.imm << 1);
     ex_mem.rd = id_ex.rd;
 
-    if (id_ex.opcode == "ADD") {
-        ex_mem.aluResult = id_ex.regVal1 + id_ex.regVal2;
-    } else if (id_ex.opcode == "SUB") {
-        ex_mem.aluResult = id_ex.regVal1 - id_ex.regVal2;
-    } else if (id_ex.opcode == "ADDI") {
-        ex_mem.aluResult = id_ex.regVal1 + id_ex.imm;
-    }
+    int64_t operand2 = id_ex.ALUSrc ? id_ex.imm : id_ex.regVal2;
 
-    ex_mem.zero = (id_ex.regVal1 == id_ex.regVal2);
+    ex_mem.aluResult = performALUOperation(id_ex.ALUOp, id_ex.regVal1, operand2, id_ex.funct3, id_ex.funct7);
+
+    ex_mem.zero = (id_ex.ALUOp == 0b01) && (ex_mem.aluResult == 1);
+
+    ex_mem.regVal2 = id_ex.regVal2;
 
     ex_mem.Branch = id_ex.Branch;
     ex_mem.MemRead = id_ex.MemRead;
@@ -93,6 +166,8 @@ void Processor::memoryAccess() {
     mem_wb.rd = ex_mem.rd;
     mem_wb.RegWrite = ex_mem.RegWrite;
     mem_wb.MemToReg = ex_mem.MemToReg;
+    entry.PCsrc = ex_mem.Branch && ex_mem.zero;
+    entry.PC2 = ex_mem.pc_imm;
 }
 
 void Processor::writeBack() {
@@ -108,9 +183,10 @@ void Processor::writeBack() {
 
 void Processor::run() {
     while (pc < memory.size() * 4) {
-        std::cout << "--------------------" << std::endl;
+        std::cout << "--------------------" << std::endl;        
         fetch();
         decode();
+        PC_calculation();
         execute();
         memoryAccess();
         writeBack();

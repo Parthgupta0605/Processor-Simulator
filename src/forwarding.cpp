@@ -9,7 +9,6 @@ ForwardingProcessor::ForwardingProcessor() : Processor() {
 
 void ForwardingProcessor::execute() {
     // Check for forwarding conditions
-    std::cout << "Inside execute_forward" << std::endl;
     if (checkForwardingEX_MEM_to_EX()) {
         forwardedVal1 = ex_mem.aluResult;
     } else if (checkForwardingMEM_WB_to_EX()) {
@@ -27,29 +26,21 @@ void ForwardingProcessor::execute() {
     }
 
     // Perform ALU operation with forwarded values
-    ex_mem.pc_imm = id_ex.pc + id_ex.imm;
+    ex_mem.pc_imm = id_ex.pc + (id_ex.imm << 1);
     ex_mem.rd = id_ex.rd;
     ex_mem.regVal2 = forwardedVal2;
 
-    if (id_ex.ALUOp == 2) { // R-type
-        if (id_ex.opcode == "ADD") {
-            ex_mem.aluResult = forwardedVal1 + forwardedVal2;
-            std::cout << "[EX] Executed ADD, ALU Result: " << ex_mem.aluResult << std::endl;
-        } else if (id_ex.opcode == "SUB") {
-            ex_mem.aluResult = forwardedVal1 - forwardedVal2;
-            std::cout << "[EX] Executed SUB, ALU Result: " << ex_mem.aluResult << std::endl;
-        }
-    } else if (id_ex.ALUOp == 1) { // I-type (ADDI)
-        ex_mem.aluResult = forwardedVal1 + id_ex.imm;
-        std::cout << "[EX] Executed ADDI, ALU Result: " << ex_mem.aluResult << std::endl;
-    }
+    int64_t operand2 = id_ex.ALUSrc ? id_ex.imm : ex_mem.regVal2;
+    ex_mem.aluResult = performALUOperation(id_ex.ALUOp, forwardedVal1, operand2, id_ex.funct3, id_ex.funct7);
 
-    ex_mem.zero = (ex_mem.aluResult == 0);
+    ex_mem.zero = (id_ex.ALUOp == 0b01) && (ex_mem.aluResult == 1);
     ex_mem.Branch = id_ex.Branch;
     ex_mem.MemRead = id_ex.MemRead;
     ex_mem.MemWrite = id_ex.MemWrite;
     ex_mem.RegWrite = id_ex.RegWrite;
     ex_mem.MemToReg = id_ex.MemToReg;
+
+    std::cout << "[EX] Executed_f " << id_ex.opcode << ", ALU Result: " << ex_mem.aluResult << std::endl;
 }
 
 void ForwardingProcessor::memoryAccess() {

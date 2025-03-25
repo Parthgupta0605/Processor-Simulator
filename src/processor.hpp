@@ -11,6 +11,7 @@ public:
     void loadProgram(const std::vector<uint32_t>& program);
     void run();
 
+    virtual void PC_calculation();
     virtual void fetch();
     virtual void decode();
     virtual void execute();
@@ -20,6 +21,14 @@ public:
     uint32_t registers[32];
     uint64_t pc;
     std::vector<uint32_t> memory;
+
+    int64_t performALUOperation(int ALUOp, int64_t operand1, int64_t operand2, int funct3, int funct7);
+
+    struct Entry {
+        int PCsrc;
+        uint64_t PC1;
+        uint64_t PC2;
+    } entry;
 
     struct IF_ID {
         uint64_t pc;
