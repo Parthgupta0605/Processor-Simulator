@@ -58,20 +58,53 @@ void simulatePipeline(Processor &processor) {
     int fetch_counter = 0;
 
     // Run until the pipeline is completely drained
-    while (cycle < processor.memory.size() + PIPELINE_STAGES) {
+    while (cycle < processor.memory.size() * PIPELINE_STAGES) {
         std::cout << "--------------------" << std::endl;
         std::cout << "Cycle: " << cycle + 1 << std::endl;
-
-        // Stages executed in reverse order to ensure proper data flow
-        if ((cycle>=4) && (writeback_counter < processor.memory.size())) {writeback_counter++; processor.writeBack();}      // WriteBack happens after 4 cycles
-        if ((cycle>=3) && (memory_counter < processor.memory.size())) {memory_counter++; processor.memoryAccess();}   // MemoryAccess happens after 3 cycles
-        if ((cycle>=2) && (execute_counter < processor.memory.size())) {execute_counter++; processor.execute();}        // Execute happens after 2 cycles
-        if ((cycle>=1) && (decode_counter < processor.memory.size())) {decode_counter++; processor.decode();}        // Decode happens after 1 cycle
-        if ((cycle>=0) && (fetch_counter < processor.memory.size())){fetch_counter++; processor.fetch();} // Fetch while instructions are left
+        switch (std::get<1>(processor.memory[processor.current]).stage) {
+            case 5:
+                if ((cycle>=4) && !(processor.wb_stall) && (writeback_counter < processor.memory.size())) {writeback_counter++; processor.writeBack();}      // WriteBack happens after 4 cycles
+            case 4:
+                if ((cycle>=3) && !(processor.mem_stall) && (memory_counter < processor.memory.size())) {memory_counter++; processor.memoryAccess();}   // MemoryAccess happens after 3 cycles
+            case 3:
+                if ((cycle>=2) && !(processor.ex_stall) && (execute_counter < processor.memory.size())) {execute_counter++; processor.execute();}        // Execute happens after 2 cycles
+            case 2:
+                if ((cycle>=1) && !(processor.id_stall) && (decode_counter < processor.memory.size())) {decode_counter++; processor.decode();}        // Decode happens after 1 cycle
+            case 1:
+                if ((cycle>=0) && !(processor.if_stall) && (fetch_counter < processor.memory.size())){fetch_counter++; processor.fetch();} // Fetch while instructions are left
+            default :
+                std::cout << "No instructions left to process." << std::endl;
+                break;
+        }
 
         // Debug the program counter and pipeline state
         std::cout << "PC: " << processor.pc << std::endl;
         cycle++;
+        if (processor.mem_stall && processor.ex_stall && processor.id_stall && processor.if_stall) {
+            processor.mem_stall = false;
+            processor.ex_stall = false;
+            processor.id_stall = false;
+            processor.if_stall = false;
+        }
+        switch (std::get<1>(processor.memory[processor.current]).stage) {
+            case 1:
+            processor.if_stall = false;
+            break;
+            case 2:
+            processor.id_stall = false;           
+            break;
+            case 3:
+            processor.ex_stall = false;
+            break;
+            case 4:
+            processor.mem_stall = false;
+            break;
+            case 5:
+            processor.wb_stall = false;
+            break;
+            default:
+                break;
+        }
     }
 
     std::cout << "Pipeline simulation complete." << std::endl;

@@ -1,7 +1,7 @@
 #include "instruction.hpp"
 #include <iostream>
 
-Instruction::Instruction(uint32_t code) : M_Code(code) {
+Instruction::Instruction(uint32_t code) : M_Code(code), stage(1) {
     decode();
 }
 
@@ -50,7 +50,7 @@ void Instruction::decode() {
 
         case 0x23: // Store (S-Type)
             funct3 = (M_Code & funct3_mask) >> 12;
-            rs1 = (M_Code & rs1_mask) >> 15;
+            rd = (M_Code & rs1_mask) >> 15;
             rs2 = (M_Code & rs2_mask) >> 20;
             imm = static_cast<int64_t>(((M_Code >> 7) & 0x1F) | ((M_Code >> 25) << 5));
             if (funct3 == 0x0) opcode = "SB";
@@ -91,5 +91,5 @@ void Instruction::decode() {
     
     std::cout << "Decoded: " << opcode << " rd: " << rd << " rs1: " << rs1 
               << " rs2: " << rs2 << " funct3: " << funct3 
-              << " funct7: " << funct7 << " imm: " << imm << std::endl;
+              << " funct7: " << funct7 << " imm: " << imm <<" stage: " << stage << std::endl;
 }

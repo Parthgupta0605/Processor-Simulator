@@ -46,9 +46,9 @@ void ForwardingProcessor::execute() {
 void ForwardingProcessor::memoryAccess() {
     // Forward memory read/write results
     if (ex_mem.MemRead) {
-        mem_wb.memData = memory[ex_mem.aluResult / 4];
+        mem_wb.memData = std::get<0>(memory[ex_mem.aluResult / 4]);
     } else if (ex_mem.MemWrite) {
-        memory[ex_mem.aluResult / 4] = ex_mem.regVal2;
+        std::get<0>(memory[ex_mem.aluResult / 4]) = ex_mem.regVal2;
     }
 
     mem_wb.aluResult = ex_mem.aluResult;

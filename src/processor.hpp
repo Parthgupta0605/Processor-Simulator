@@ -3,6 +3,7 @@
 
 #include "instruction.hpp"
 #include <vector>
+#include <tuple>
 #include <cstdint>
 
 class Processor {
@@ -11,21 +12,27 @@ public:
     void loadProgram(const std::vector<uint32_t>& program);
     void run();
 
-    virtual void PC_calculation();
     virtual void fetch();
     virtual void decode();
     virtual void execute();
     virtual void memoryAccess();
     virtual void writeBack();
+    virtual void PC_update();
 
+    bool mem_stall = false;
+    bool ex_stall = false;
+    bool id_stall = false;
+    bool if_stall = false;
+    bool wb_stall = false;
     uint32_t registers[32];
     uint64_t pc;
-    std::vector<uint32_t> memory;
+    std::vector<std::tuple<uint32_t,struct Instruction>> memory;
+    int current = -1;
 
     int64_t performALUOperation(int ALUOp, int64_t operand1, int64_t operand2, int funct3, int funct7);
 
     struct Entry {
-        int PCsrc;
+        int PCsrc=0;
         uint64_t PC1;
         uint64_t PC2;
     } entry;
@@ -36,6 +43,7 @@ public:
     } if_id;
 
     struct ID_EX {
+        Instruction instr;
         uint64_t pc;
         std::string opcode;
         int rd;
@@ -43,9 +51,11 @@ public:
         int rs1,rs2;
         int funct3, funct7;
         int regVal1, regVal2;
+        int returnAddress;
 
         bool ALUSrc;
         uint8_t ALUOp :2;
+        bool PCsrc;
         bool Branch;
         bool MemRead;
         bool MemWrite;
@@ -54,11 +64,14 @@ public:
     } id_ex;
 
     struct EX_MEM {
-        uint64_t pc_imm;
+        Instruction instr;
+        uint64_t pc_imm,pc;
         uint32_t aluResult;
         uint32_t regVal2;
+        int rs1,rs2;
         int rd;
         bool zero;
+        int returnAddress;
 
         bool Branch;
         bool MemRead;
@@ -68,17 +81,17 @@ public:
     } ex_mem;
 
     struct MEM_WB {
+        Instruction instr;
         uint32_t memData;
         uint32_t aluResult;
         int rd;
-
+        int returnAddress;
         bool RegWrite;
         bool MemToReg;
     } mem_wb;
 
 
-     
-    Processor(bool enableForwarding);
+    
 };
 
 #endif
