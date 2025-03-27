@@ -1,0 +1,196 @@
+Simulating Processor **without** forwarding:
+Pipeline Initialized
+Starting pipeline simulation...
+--------------------
+Cycle: 1
+[IF] Fetching instruction at PC: 0
+No instructions left to process.
+PC: 4
+--------------------
+Cycle: 2
+[ID] Decoding instruction at PC: 0
+[IF] Fetching instruction at PC: 4
+No instructions left to process.
+PC: 8
+--------------------
+Cycle: 3
+[EX] Executed ADDI, at PC: 0
+[ID] Decoding instruction at PC: 4
+[IF] Fetching instruction at PC: 8
+No instructions left to process.
+PC: 12
+--------------------
+Cycle: 4
+[MEM] No memory operation, at PC: -1
+No instructions left to process.
+PC: 12
+--------------------
+Cycle: 5
+[WB] Register x5 updated to 0, at PC: 0
+No instructions left to process.
+PC: 12
+--------------------
+Cycle: 6
+[EX] Executed ADD, at PC: 4
+[ID] Decoding instruction at PC: 8
+[IF] Fetching instruction at PC: 12
+No instructions left to process.
+PC: 16
+--------------------
+Cycle: 7
+[MEM] No memory operation, at PC: 0
+No instructions left to process.
+PC: 16
+--------------------
+Cycle: 8
+[WB] Register x6 updated to 0, at PC: 4
+No instructions left to process.
+PC: 16
+--------------------
+Cycle: 9
+[EX] Executed LB, at PC: 8
+[ID] Decoding instruction at PC: 12
+[IF] Fetching instruction at PC: 16
+No instructions left to process.
+PC: 20
+--------------------
+Cycle: 10
+[MEM] Loaded data from memory: 659, at PC: 4
+No instructions left to process.
+PC: 20
+--------------------
+Cycle: 11
+[WB] Register x6 updated to 659, at PC: 8
+No instructions left to process.
+PC: 20
+--------------------
+Cycle: 12
+[EX] Executed BEQ, at PC: 12
+[ID] Decoding instruction at PC: 16
+[IF] Fetching instruction at PC: 20
+No instructions left to process.
+PC: 24
+--------------------
+Cycle: 13
+[MEM] No memory operation, at PC: 8
+[EX] Executed ADDI, at PC: 16
+[ID] Decoding instruction at PC: 20
+[IF] Fetching instruction at PC: 24
+No instructions left to process.
+PC: 28
+--------------------
+Cycle: 14
+[WB] No writeback operation, at PC: 12
+[MEM] No memory operation, at PC: 12
+[EX] Executed JAL, Jump to: 4, Return Address: 24
+[IF] Fetching instruction at PC: 4
+No instructions left to process.
+PC: 8
+--------------------
+Cycle: 15
+[WB] Register x5 updated to 0, at PC: 16
+[MEM] No memory operation, at PC: 16
+[ID] Decoding instruction at PC: 4
+[IF] Fetching instruction at PC: 8
+No instructions left to process.
+PC: 12
+--------------------
+Cycle: 16
+[WB] Register x0 updated to 0, at PC: 20
+[WB] JAL: Register x0 updated with return address: 24, at PC: 4
+[EX] Executed ADD, at PC: 4
+[ID] Decoding instruction at PC: 8
+[IF] Fetching instruction at PC: 12
+No instructions left to process.
+PC: 16
+--------------------
+Cycle: 17
+[MEM] No memory operation, at PC: 20
+No instructions left to process.
+PC: 16
+--------------------
+Cycle: 18
+[WB] Register x6 updated to 0, at PC: 4
+No instructions left to process.
+PC: 16
+--------------------
+Cycle: 19
+[EX] Executed LB, at PC: 8
+[ID] Decoding instruction at PC: 12
+[IF] Fetching instruction at PC: 16
+No instructions left to process.
+PC: 20
+--------------------
+Cycle: 20
+[MEM] Loaded data from memory: 0, at PC: 4
+No instructions left to process.
+PC: 20
+--------------------
+Cycle: 21
+[WB] Register x6 updated to 0, at PC: 8
+No instructions left to process.
+PC: 20
+--------------------
+Cycle: 22
+[EX] Executed BEQ, at PC: 12
+[ID] Decoding instruction at PC: 16
+[IF] Fetching instruction at PC: 20
+No instructions left to process.
+PC: 24
+--------------------
+Cycle: 23
+[MEM] No memory operation, at PC: 8
+[EX] Executed ADDI, at PC: 16
+[ID] Decoding instruction at PC: 20
+[IF] Fetching instruction at PC: 24
+No instructions left to process.
+PC: 28
+--------------------
+Cycle: 24
+[WB] No writeback operation, at PC: 12
+[MEM] No memory operation, at PC: 12
+[EX] Executed JAL, Jump to: 4, Return Address: 24
+[IF] Fetching instruction at PC: 4
+No instructions left to process.
+PC: 8
+--------------------
+Cycle: 25
+[WB] Register x5 updated to 0, at PC: 16
+[MEM] No memory operation, at PC: 16
+[ID] Decoding instruction at PC: 4
+[IF] Fetching instruction at PC: 8
+No instructions left to process.
+PC: 12
+--------------------
+Cycle: 26
+[WB] Register x0 updated to 0, at PC: 20
+[WB] JAL: Register x0 updated with return address: 24, at PC: 4
+[EX] Executed ADD, at PC: 4
+[ID] Decoding instruction at PC: 8
+[IF] Fetching instruction at PC: 12
+No instructions left to process.
+PC: 16
+--------------------
+Cycle: 27
+[MEM] No memory operation, at PC: 20
+No instructions left to process.
+PC: 16
+--------------------
+Cycle: 28
+[WB] Register x6 updated to 0, at PC: 4
+No instructions left to process.
+PC: 16
+--------------------
+Cycle: 29
+[EX] Executed LB, at PC: 8
+[ID] Decoding instruction at PC: 12
+[IF] Fetching instruction at PC: 16
+No instructions left to process.
+PC: 20
+--------------------
+Cycle: 30
+[MEM] Loaded data from memory: 659, at PC: 4
+No instructions left to process.
+PC: 20
+Pipeline simulation complete.
+--------------------

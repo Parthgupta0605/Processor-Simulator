@@ -1,0 +1,165 @@
+Simulating Processor **without** forwarding:
+Pipeline Initialized
+Starting pipeline simulation...
+--------------------
+Cycle: 1
+[IF] Fetching instruction at PC: 0
+No instructions left to process.
+PC: 4
+--------------------
+Cycle: 2
+[ID] Decoding instruction at PC: 0
+[IF] Fetching instruction at PC: 4
+No instructions left to process.
+PC: 8
+--------------------
+Cycle: 3
+[EX] Executed UNKNOWN, at PC: 0
+[ID] Decoding instruction at PC: 4
+[IF] Fetching instruction at PC: 8
+No instructions left to process.
+PC: 12
+--------------------
+Cycle: 4
+[MEM] No memory operation, at PC: -1
+[EX] Executed UNKNOWN, at PC: 4
+[ID] Decoding instruction at PC: 8
+[IF] Fetching instruction at PC: 12
+No instructions left to process.
+PC: 16
+--------------------
+Cycle: 5
+[WB] No writeback operation, at PC: 0
+[MEM] No memory operation, at PC: 0
+[EX] Executed UNKNOWN, at PC: 8
+[ID] Decoding instruction at PC: 12
+[IF] Fetching instruction at PC: 16
+No instructions left to process.
+PC: 20
+--------------------
+Cycle: 6
+[WB] No writeback operation, at PC: 4
+[MEM] No memory operation, at PC: 4
+[EX] Executed UNKNOWN, at PC: 12
+[ID] Decoding instruction at PC: 16
+[IF] Fetching instruction at PC: 20
+No instructions left to process.
+PC: 24
+--------------------
+Cycle: 7
+[WB] No writeback operation, at PC: 8
+[MEM] No memory operation, at PC: 8
+[EX] Executed UNKNOWN, at PC: 16
+[ID] Decoding instruction at PC: 20
+[IF] Fetching instruction at PC: 24
+No instructions left to process.
+PC: 28
+--------------------
+Cycle: 8
+[WB] No writeback operation, at PC: 12
+[MEM] No memory operation, at PC: 12
+[EX] Executed UNKNOWN, at PC: 20
+[ID] Decoding instruction at PC: 24
+[IF] Fetching instruction at PC: 28
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 9
+[WB] No writeback operation, at PC: 16
+[MEM] No memory operation, at PC: 16
+[EX] Executed UNKNOWN, at PC: 24
+[ID] Decoding instruction at PC: 28
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 10
+[WB] No writeback operation, at PC: 20
+[MEM] No memory operation, at PC: 20
+[EX] Executed UNKNOWN, at PC: 28
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 11
+[WB] No writeback operation, at PC: 24
+[MEM] No memory operation, at PC: 24
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 12
+[WB] No writeback operation, at PC: 28
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 13
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 14
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 15
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 16
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 17
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 18
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 19
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 20
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 21
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 22
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 23
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 24
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 25
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 26
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 27
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 28
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 29
+No instructions left to process.
+PC: 32
+--------------------
+Cycle: 30
+No instructions left to process.
+PC: 32
+Pipeline simulation complete.
+--------------------
