@@ -4,6 +4,6 @@
 #include "processor.hpp"
 
 void initializePipeline(Processor &processor);
-void simulatePipeline(Processor &processor);
+void simulatePipeline(Processor &processor, int cycleCount);
 
 #endif

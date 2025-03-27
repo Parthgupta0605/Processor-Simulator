@@ -43,7 +43,7 @@ void initializePipeline(Processor &processor) {
     processor.mem_wb.MemToReg = false;
 }
 
-void simulatePipeline(Processor &processor) {
+void simulatePipeline(Processor &processor, int cycleCount) {
     std::cout << "Starting pipeline simulation..." << std::endl;
 
     // Total pipeline stages
@@ -51,27 +51,42 @@ void simulatePipeline(Processor &processor) {
 
     // Keep track of the number of cycles
     int cycle = 0;
-    int decode_counter = 0;
-    int execute_counter = 0;
-    int memory_counter = 0;
-    int writeback_counter = 0;
-    int fetch_counter = 0;
+    unsigned int decode_counter = 0;
+    unsigned int execute_counter = 0;
+    unsigned int memory_counter = 0;
+    unsigned int writeback_counter = 0;
+    unsigned int fetch_counter = 0;
 
     // Run until the pipeline is completely drained
-    while (cycle < processor.memory.size() * PIPELINE_STAGES) {
+    while (cycle < cycleCount) {
         std::cout << "--------------------" << std::endl;
         std::cout << "Cycle: " << cycle + 1 << std::endl;
         switch (std::get<1>(processor.memory[processor.current]).stage) {
             case 5:
-                if ((cycle>=4) && !(processor.wb_stall) && (writeback_counter < processor.memory.size())) {writeback_counter++; processor.writeBack();}      // WriteBack happens after 4 cycles
+                if ((cycle>=4) && !(processor.wb_stall)  ) {
+                    std::get<1>(processor.memory[writeback_counter]).cycleEntered[4] = cycle;
+                    writeback_counter++; processor.writeBack();
+                }      // WriteBack happens after 4 cycles
             case 4:
-                if ((cycle>=3) && !(processor.mem_stall) && (memory_counter < processor.memory.size())) {memory_counter++; processor.memoryAccess();}   // MemoryAccess happens after 3 cycles
+                if ((cycle>=3) && !(processor.mem_stall) ) {
+                    std::get<1>(processor.memory[memory_counter]).cycleEntered[3] = cycle;
+                    memory_counter++; processor.memoryAccess();
+                }   // MemoryAccess happens after 3 cycles
             case 3:
-                if ((cycle>=2) && !(processor.ex_stall) && (execute_counter < processor.memory.size())) {execute_counter++; processor.execute();}        // Execute happens after 2 cycles
+                if ((cycle>=2) && !(processor.ex_stall) ) {
+                    std::get<1>(processor.memory[execute_counter]).cycleEntered[2] = cycle;
+                    execute_counter++; processor.execute();
+                }        // Execute happens after 2 cycles
             case 2:
-                if ((cycle>=1) && !(processor.id_stall) && (decode_counter < processor.memory.size())) {decode_counter++; processor.decode();}        // Decode happens after 1 cycle
+                if ((cycle>=1) && !(processor.id_stall) ) {
+                    std::get<1>(processor.memory[decode_counter]).cycleEntered[1] = cycle;
+                    decode_counter++; processor.decode();
+                }        // Decode happens after 1 cycle
             case 1:
-                if ((cycle>=0) && !(processor.if_stall) && (fetch_counter < processor.memory.size())){fetch_counter++; processor.fetch();} // Fetch while instructions are left
+                if ((cycle>=0) && !(processor.if_stall) ){
+                    std::get<1>(processor.memory[fetch_counter]).cycleEntered[0] = cycle;
+                    fetch_counter++; processor.fetch();
+                } // Fetch while instructions are left
             default :
                 std::cout << "No instructions left to process." << std::endl;
                 break;
@@ -86,6 +101,7 @@ void simulatePipeline(Processor &processor) {
             processor.id_stall = false;
             processor.if_stall = false;
         }
+        std::cout<<processor.current<<std::endl;
         switch (std::get<1>(processor.memory[processor.current]).stage) {
             case 1:
             processor.if_stall = false;
@@ -108,4 +124,9 @@ void simulatePipeline(Processor &processor) {
     }
 
     std::cout << "Pipeline simulation complete." << std::endl;
+    std::cout << "--------------------" << std::endl;
+    for(unsigned int i=0; i < processor.memory.size(); i++){
+        std::cout << "Instruction " << i + 1 << std::endl;
+        std::cout << std::get<1>(processor.memory[i]).cycleEntered[0] << " " << std::get<1>(processor.memory[i]).cycleEntered[1] << " " << std::get<1>(processor.memory[i]).cycleEntered[2] << " " << std::get<1>(processor.memory[i]).cycleEntered[3] << " " << std::get<1>(processor.memory[i]).cycleEntered[4] << std::endl;
+    }
 }
