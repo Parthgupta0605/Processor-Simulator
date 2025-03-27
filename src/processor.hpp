@@ -17,7 +17,6 @@ public:
     virtual void execute();
     virtual void memoryAccess();
     virtual void writeBack();
-    virtual void PC_update();
 
     bool mem_stall = false;
     bool ex_stall = false;
@@ -32,11 +31,7 @@ public:
 
     int64_t performALUOperation(int ALUOp, int64_t operand1, int64_t operand2, int funct3, int funct7);
 
-    struct Entry {
-        int PCsrc=0;
-        uint64_t PC1;
-        uint64_t PC2;
-    } entry;
+
 
     struct IF_ID {
         uint64_t pc;
@@ -45,7 +40,7 @@ public:
 
     struct ID_EX {
         Instruction instr;
-        int64_t pc;
+        int64_t pc=-1;
         std::string opcode;
         int rd;
         int64_t imm;
@@ -66,7 +61,7 @@ public:
 
     struct EX_MEM {
         Instruction instr;
-        int64_t pc_imm,pc;
+        int64_t pc_imm=-1,pc=-1;
         uint32_t aluResult;
         uint32_t regVal2;
         int rs1,rs2;
@@ -85,7 +80,7 @@ public:
         Instruction instr;
         uint32_t memData;
         uint32_t aluResult;
-        int64_t pc_imm,pc;
+        int64_t pc_imm=-1,pc=-1;
         int rd;
         int returnAddress;
         bool MemWrite;

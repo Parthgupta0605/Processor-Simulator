@@ -1,33 +1,42 @@
 CXX = g++
-CXXFLAGS = -std=c++11 -Wall
+CXXFLAGS = -std=c++17 -Wall -Wextra
 
-# Default target
-all: noforward forward
+# Source files
+SRC_NON_FORWARDING = main_non_forwarding.cpp processor.cpp pipeline.cpp instruction.cpp
+SRC_FORWARDING = main_forwarding.cpp forwarding.cpp processor.cpp pipeline.cpp instruction.cpp
 
-# Compile without forwarding
-noforward: main.o processor.o pipeline.o instruction.o
-	$(CXX) $(CXXFLAGS) -o noforward main.o processor.o pipeline.o instruction.o
+# Object files
+OBJ_NON_FORWARDING = $(SRC_NON_FORWARDING:.cpp=.o)
+OBJ_FORWARDING = $(SRC_FORWARDING:.cpp=.o)
 
-# Compile with forwarding (ensure processor.o is linked)
-forward: main.o processor.o forwarding.o pipeline.o instruction.o
-	$(CXX) $(CXXFLAGS) -DFORWARDING -o forward main.o processor.o forwarding.o pipeline.o instruction.o
+# Executables
+EXE_NON_FORWARDING = noforward
+EXE_FORWARDING = forward
 
-# Compile main.cpp once (no need to duplicate for forwarding)
-main.o: main.cpp processor.hpp forwarding.hpp pipeline.hpp instruction.hpp
-	$(CXX) $(CXXFLAGS) -c main.cpp
+# Directories
+PARENT_DIR = ..
+INPUT_DIR = $(PARENT_DIR)/inputfiles
+OUTPUT_DIR = $(PARENT_DIR)/outputfiles
 
-processor.o: processor.cpp processor.hpp instruction.hpp
-	$(CXX) $(CXXFLAGS) -c processor.cpp
+# Targets
+all: $(EXE_NON_FORWARDING) $(EXE_FORWARDING)
+	mkdir -p $(OUTPUT_DIR)
+	for input_file in $(INPUT_DIR)/*; do \
+		filename=$$(basename $$input_file); \
+		output_base=$$(basename $$input_file .txt); \
+		./$(EXE_NON_FORWARDING) $$input_file 30 > $(OUTPUT_DIR)/$${output_base}_noforward_out.txt; \
+		./$(EXE_FORWARDING) $$input_file 30 > $(OUTPUT_DIR)/$${output_base}_forward_out.txt; \
+	done
 
-forwarding.o: forwarding.cpp forwarding.hpp
-	$(CXX) $(CXXFLAGS) -c forwarding.cpp
+$(EXE_NON_FORWARDING): $(OBJ_NON_FORWARDING)
+	$(CXX) $(CXXFLAGS) $^ -o $@
 
-pipeline.o: pipeline.cpp pipeline.hpp instruction.hpp
-	$(CXX) $(CXXFLAGS) -c pipeline.cpp
+$(EXE_FORWARDING): $(OBJ_FORWARDING)
+	$(CXX) $(CXXFLAGS) $^ -o $@
 
-instruction.o: instruction.cpp instruction.hpp
-	$(CXX) $(CXXFLAGS) -c instruction.cpp
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Clean up object files and executables
 clean:
-	rm -f *.o noforward forward
+	rm -f $(OBJ_NON_FORWARDING) $(OBJ_FORWARDING) $(EXE_NON_FORWARDING) $(EXE_FORWARDING)
+	rm -rf $(OUTPUT_DIR)

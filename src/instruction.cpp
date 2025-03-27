@@ -70,7 +70,8 @@ void Instruction::decode() {
 
         case 0x6F: // JAL (J-Type)
         rd = (M_Code & rd_mask) >> 7; // Extract destination register (rd)
-        
+        rs1 =-1;
+        rs2 =-1;
         // Extract immediate and combine all fields
         imm = ((M_Code >> 31) & 0x1) << 20 | // imm[20]
                 ((M_Code >> 12) & 0xFF) << 12 | // imm[19:12]
@@ -96,8 +97,4 @@ void Instruction::decode() {
             opcode = "UNKNOWN";
             break;
     }
-    
-    std::cout << "Decoded: " << opcode << " rd: " << rd << " rs1: " << rs1 
-              << " rs2: " << rs2 << " funct3: " << funct3 
-              << " funct7: " << funct7 << " imm: " << imm <<" stage: " << stage << std::endl;
 }

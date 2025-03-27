@@ -38,8 +38,9 @@ void ForwardingProcessor::execute() {
         std::cout << "[EX] Executed JAL, Jump to: " << ex_mem.pc_imm 
                   << ", Return Address: " << ex_mem.returnAddress << std::endl;
     }
-
-    std::cout << "[EX] Executed_f " << id_ex.opcode << ", ALU Result: " << ex_mem.aluResult << std::endl;
+    else{
+    std::cout << "[EX] Executed_f " << id_ex.opcode << ", at PC: " << ex_mem.pc << std::endl;
+    }
     }
 }
 
@@ -50,8 +51,8 @@ void ForwardingProcessor::memoryAccess() {
     mem_wb.instr = ex_mem.instr;
     std::get<1>(memory[ex_mem.pc / 4]).stage = 5;
 
-    if (ex_mem.MemRead && std::get<1>(memory[current]).rd != 0 ){
-        if (ex_mem.MemWrite && (std::get<1>(memory[current]).rd == std::get<1>(memory[current+1]).rs1 || std::get<1>(memory[current]).rd == std::get<1>(memory[current+1]).rs2));
+    if (ex_mem.MemRead && ex_mem.rd != 0 ){
+        if (ex_mem.MemWrite && (ex_mem.rd == id_ex.rs1 || ex_mem.rd == id_ex.rs2));
         else {
         ex_stall = true;
         id_stall = true;
@@ -60,13 +61,13 @@ void ForwardingProcessor::memoryAccess() {
     }
     if (ex_mem.MemRead) {
         mem_wb.memData = std::get<0>(memory[ex_mem.aluResult / 4]);
-        std::cout << "[MEM] Loaded data from memory: " << mem_wb.memData << std::endl;
+        std::cout << "[MEM] Loaded data from memory: " << mem_wb.memData << ", at PC: " <<mem_wb.pc<< std::endl;
     } else if (ex_mem.MemWrite) {
         std::get<0>(memory[ex_mem.aluResult / 4]) = ex_mem.regVal2;
-        std::cout << "[MEM] Stored data in memory: " << ex_mem.regVal2 << std::endl;
+        std::cout << "[MEM] Stored data in memory: " << ex_mem.regVal2 << ", at PC: " <<mem_wb.pc<< std::endl;
     }
     else {
-        std::cout << "[MEM] No memory operation" << std::endl;
+        std::cout << "[MEM] No memory operation, at PC: " <<mem_wb.pc << std::endl;
     }
 
     mem_wb.aluResult = ex_mem.aluResult;
@@ -92,17 +93,17 @@ void ForwardingProcessor::writeBack() {
         } else {
             registers[mem_wb.rd] = mem_wb.aluResult;
         }
-        std::cout << "[WB] Register x" << mem_wb.rd << " updated to " << registers[mem_wb.rd] << std::endl;
+        std::cout << "[WB] Register x" << mem_wb.rd << " updated to " << registers[mem_wb.rd] << ", at PC: " <<current*4<< std::endl;
     }
     else {
-        std::cout << "[WB] No writeback operation" << std::endl;
+        std::cout << "[WB] No writeback operation, at PC: " <<current*4<< std::endl;
     }
     if (mem_wb.instr.opcode == "JAL" && mem_wb.RegWrite) {
         registers[mem_wb.rd] = mem_wb.returnAddress;
         NOP = true;
         current = mem_wb.pc_imm / 4;
         std::cout << "[WB] JAL: Register x" << mem_wb.rd 
-                  << " updated with return address: " << mem_wb.returnAddress << std::endl;
+                  << " updated with return address: " << mem_wb.returnAddress << ", at PC: " <<current*4 << std::endl;
     }
     else{
     if (ex_mem.MemRead && std::get<1>(memory[current]).rd != 0 ){

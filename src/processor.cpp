@@ -22,13 +22,6 @@ void Processor::loadProgram(const std::vector<uint32_t>& program) {
     
 }
 
-void Processor::PC_update() {
-    if (entry.PCsrc == 1) {
-        pc = entry.PC2;
-    } else {
-        pc = entry.PC1;
-    }
-}
 
 void Processor::fetch() {
     if_id.pc = pc;
@@ -41,7 +34,7 @@ void Processor::fetch() {
 }
 
 void Processor::decode() {
-    if (NOP) NOP = false;
+    if (NOP) {NOP = false;if_id.pc=ex_mem.pc_imm;}
     else {
     std::get<1>(memory[if_id.pc / 4]).stage = 3;
     id_ex.instr = if_id.instr;
@@ -51,10 +44,8 @@ void Processor::decode() {
     id_ex.rd = if_id.instr.rd;
     id_ex.rs1 = if_id.instr.rs1;
     id_ex.rs2 = if_id.instr.rs2;
-    std::cout << "rs1: " << id_ex.rs1 << " rs2: " << id_ex.rs2 << std::endl;
     id_ex.regVal1 = registers[if_id.instr.rs1];
     id_ex.regVal2 = registers[if_id.instr.rs2];
-    std::cout << "regVal1: " << id_ex.regVal1 << " regVal2: " << id_ex.regVal2 << std::endl;
     id_ex.imm = if_id.instr.imm;
     id_ex.funct3 = if_id.instr.funct3;
     id_ex.funct7 = if_id.instr.funct7;
@@ -80,6 +71,7 @@ void Processor::decode() {
         id_ex.RegWrite = true;
         id_ex.returnAddress = id_ex.pc + 4; 
     }
+    
 }
 
 
@@ -138,6 +130,7 @@ void Processor::execute() {
     std::get<1>(memory[id_ex.pc / 4]).stage = 4;
     ex_mem.instr = id_ex.instr;
     ex_mem.pc_imm = id_ex.pc + id_ex.imm ;
+    
     ex_mem.pc = id_ex.pc;
     ex_mem.rd = id_ex.rd;
     ex_mem.rs1 = id_ex.rs1;
@@ -165,8 +158,10 @@ void Processor::execute() {
                   << ", Return Address: " << ex_mem.returnAddress << std::endl;
     }
     
-
-    std::cout << "[EX] Executed " << id_ex.opcode << ", ALU Result: " << ex_mem.aluResult << std::endl;
+    else 
+    {
+    std::cout << "[EX] Executed " << id_ex.opcode << ", at PC: " << ex_mem.pc << std::endl;
+    }
 }
 
 
@@ -194,13 +189,13 @@ void Processor::memoryAccess() {
 
     if (ex_mem.MemRead) {
         mem_wb.memData = std::get<0>(memory[ex_mem.aluResult / 4]);
-        std::cout << "[MEM] Loaded data from memory: " << mem_wb.memData << std::endl;
+        std::cout << "[MEM] Loaded data from memory: " << mem_wb.memData << ", at PC: " <<mem_wb.pc<< std::endl;
     } else if (ex_mem.MemWrite) {
         std::get<0>(memory[ex_mem.aluResult / 4]) = ex_mem.regVal2;
-        std::cout << "[MEM] Stored data in memory: " << ex_mem.regVal2 << std::endl;
+        std::cout << "[MEM] Stored data in memory: " << ex_mem.regVal2 << ", at PC: " <<mem_wb.pc << std::endl;
     }
     else {
-        std::cout << "[MEM] No memory operation" << std::endl;
+        std::cout << "[MEM] No memory operation, at PC: " <<mem_wb.pc << std::endl;
     }
 
     mem_wb.aluResult = ex_mem.aluResult;
@@ -230,10 +225,10 @@ void Processor::writeBack() {
         } else {
             registers[mem_wb.rd] = mem_wb.aluResult;
         }
-        std::cout << "[WB] Register x" << mem_wb.rd << " updated to " << registers[mem_wb.rd] << std::endl;
+        std::cout << "[WB] Register x" << mem_wb.rd << " updated to " << registers[mem_wb.rd] << ", at PC: " <<current*4 << std::endl;
     }
     else {
-        std::cout << "[WB] No writeback operation" << std::endl;
+        std::cout << "[WB] No writeback operation, at PC: " <<current*4<< std::endl;
     }
     
     if (mem_wb.instr.opcode == "JAL" && mem_wb.RegWrite) {
@@ -241,7 +236,7 @@ void Processor::writeBack() {
         NOP = true;
         current = mem_wb.pc_imm / 4;
         std::cout << "[WB] JAL: Register x" << mem_wb.rd 
-                  << " updated with return address: " << mem_wb.returnAddress << std::endl;
+                  << " updated with return address: " << mem_wb.returnAddress << ", at PC: " <<current*4<< std::endl;
     }
     else {
     if (mem_wb.RegWrite && std::get<1>(memory[current]).rd != 0 && (std::get<1>(memory[current]).rd == std::get<1>(memory[current+1]).rs1 || std::get<1>(memory[current]).rd == std::get<1>(memory[current+1]).rs2)){
@@ -351,13 +346,4 @@ void Processor::writeBack() {
     
 }
 
-// void Processor::run() {
-//     while (pc < memory.size() * 4) {
-//         std::cout << "--------------------" << std::endl;        
-//         fetch();
-//         decode();
-//         execute();
-//         memoryAccess();
-//         writeBack();
-//     }
-// }
+
