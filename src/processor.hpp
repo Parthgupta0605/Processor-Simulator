@@ -24,8 +24,9 @@ public:
     bool id_stall = false;
     bool if_stall = false;
     bool wb_stall = false;
+    bool NOP=false ;
     uint32_t registers[32];
-    uint64_t pc;
+    int64_t pc;
     std::vector<std::tuple<uint32_t,struct Instruction>> memory;
     int current = -1;
 
@@ -44,7 +45,7 @@ public:
 
     struct ID_EX {
         Instruction instr;
-        uint64_t pc;
+        int64_t pc;
         std::string opcode;
         int rd;
         int64_t imm;
@@ -65,7 +66,7 @@ public:
 
     struct EX_MEM {
         Instruction instr;
-        uint64_t pc_imm,pc;
+        int64_t pc_imm,pc;
         uint32_t aluResult;
         uint32_t regVal2;
         int rs1,rs2;
@@ -84,8 +85,11 @@ public:
         Instruction instr;
         uint32_t memData;
         uint32_t aluResult;
+        int64_t pc_imm,pc;
         int rd;
         int returnAddress;
+        bool MemWrite;
+        bool MemRead;
         bool RegWrite;
         bool MemToReg;
     } mem_wb;

@@ -69,12 +69,20 @@ void Instruction::decode() {
             break;
 
         case 0x6F: // JAL (J-Type)
-            rd = (M_Code & rd_mask) >> 7;
-            imm = static_cast<int64_t>(((M_Code >> 12) & 0xFF) | ((M_Code >> 20) & 0x1) << 11 |
-                                        ((M_Code >> 21) & 0x3FF) << 1 | ((M_Code >> 31) << 20));
-            imm = imm << 11 >> 11;
-            opcode = "JAL";
-            break;
+        rd = (M_Code & rd_mask) >> 7; // Extract destination register (rd)
+        
+        // Extract immediate and combine all fields
+        imm = ((M_Code >> 31) & 0x1) << 20 | // imm[20]
+                ((M_Code >> 12) & 0xFF) << 12 | // imm[19:12]
+                ((M_Code >> 20) & 0x1) << 11 | // imm[11]
+                ((M_Code >> 21) & 0x3FF) << 1; // imm[10:1]
+    
+        // Perform sign extension for 21-bit immediate
+        imm = static_cast<int64_t>(imm << 43) >> 43;
+    
+        opcode = "JAL";
+        break;
+        
 
         case 0x67: // JALR (I-Type)
             rd = (M_Code & rd_mask) >> 7;

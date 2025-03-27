@@ -19,6 +19,7 @@ void Processor::loadProgram(const std::vector<uint32_t>& program) {
         }
     }
     current = 0;
+    
 }
 
 void Processor::PC_update() {
@@ -35,10 +36,13 @@ void Processor::fetch() {
     std::get<1>(memory[pc / 4]).stage = 2;
     std::cout << "[IF] Fetching instruction at PC: " << pc << std::endl;
     pc += 4;
-    entry.PC1 = pc;
+    
+    
 }
 
 void Processor::decode() {
+    if (NOP) NOP = false;
+    else {
     std::get<1>(memory[if_id.pc / 4]).stage = 3;
     id_ex.instr = if_id.instr;
     std::cout << "[ID] Decoding instruction at PC: " << if_id.pc << std::endl;
@@ -57,26 +61,28 @@ void Processor::decode() {
 
     if (id_ex.opcode == "ADD" || id_ex.opcode == "SUB") {
         id_ex.ALUOp = 0b10;
-    } else if ( id_ex.opcode == "LW" || id_ex.opcode == "SW" ) {
+    } else if ( id_ex.opcode == "LW" || id_ex.opcode == "SW" || id_ex.opcode == "LB" || id_ex.opcode == "SB") {
         id_ex.ALUOp = 0b00;
     } else if (id_ex.opcode == "ADDI") {
         id_ex.ALUOp = 0b11;
     } else if ( id_ex.opcode == "BEQ" || id_ex.opcode == "BNE" ) {
         id_ex.ALUOp = 0b01;
     }
-    id_ex.ALUSrc = (id_ex.opcode == "ADDI" || id_ex.opcode == "LW" || id_ex.opcode == "SW");
+    id_ex.ALUSrc = (id_ex.opcode == "ADDI" || id_ex.opcode == "LW" || id_ex.opcode == "SW" || id_ex.opcode == "LB" || id_ex.opcode == "SB");
 
     id_ex.Branch = (id_ex.opcode == "BEQ" || id_ex.opcode == "BNE" || id_ex.opcode == "BLT" || id_ex.opcode == "BGE");
-    id_ex.MemRead = (id_ex.opcode == "LW");
-    id_ex.MemWrite = (id_ex.opcode == "SW");
-    id_ex.RegWrite = (id_ex.opcode == "ADD" || id_ex.opcode == "SUB" || id_ex.opcode == "ADDI" || id_ex.opcode == "LW");
-    id_ex.MemToReg = (id_ex.opcode == "LW");
+    id_ex.MemRead = (id_ex.opcode == "LW" || id_ex.opcode == "LB");
+    id_ex.MemWrite = (id_ex.opcode == "SW" || id_ex.opcode == "SB");
+    id_ex.RegWrite = (id_ex.opcode == "ADD" || id_ex.opcode == "SUB" || id_ex.opcode == "ADDI" || id_ex.opcode == "LW" || id_ex.opcode == "LB");
+    id_ex.MemToReg = (id_ex.opcode == "LW" || id_ex.opcode == "LB");
     if (id_ex.opcode == "JAL") {
         id_ex.ALUOp = 0b11;
-        id_ex.PCsrc = 1;
         id_ex.RegWrite = true;
         id_ex.returnAddress = id_ex.pc + 4; 
     }
+}
+
+
 
 }
 
@@ -127,9 +133,11 @@ int64_t Processor::performALUOperation(int ALUOp, int64_t operand1, int64_t oper
 }
 
 void Processor::execute() {
+    if (NOP) NOP = false;
+    else {
     std::get<1>(memory[id_ex.pc / 4]).stage = 4;
     ex_mem.instr = id_ex.instr;
-    ex_mem.pc_imm = id_ex.pc + (id_ex.imm << 1);
+    ex_mem.pc_imm = id_ex.pc + id_ex.imm ;
     ex_mem.pc = id_ex.pc;
     ex_mem.rd = id_ex.rd;
     ex_mem.rs1 = id_ex.rs1;
@@ -151,8 +159,8 @@ void Processor::execute() {
 
     if (id_ex.opcode == "JAL") {
         ex_mem.returnAddress = id_ex.returnAddress;  // Pass return address
-        entry.PCsrc = 1; // Indicate jump
-        entry.PC2 = ex_mem.pc_imm; // Update the PC to the jump target
+        pc = ex_mem.pc_imm;  // Update PC to jump target
+        NOP=true;
         std::cout << "[EX] Executed JAL, Jump to: " << ex_mem.pc_imm 
                   << ", Return Address: " << ex_mem.returnAddress << std::endl;
     }
@@ -161,18 +169,27 @@ void Processor::execute() {
     std::cout << "[EX] Executed " << id_ex.opcode << ", ALU Result: " << ex_mem.aluResult << std::endl;
 }
 
+
+}
+
 void Processor::memoryAccess() {
+    if (NOP) NOP = false;
+    else {
+    
     mem_wb.instr = ex_mem.instr;
     std::get<1>(memory[ex_mem.pc / 4]).stage = 5;
-    if (ex_mem.RegWrite && ex_mem.rd != 0 && (ex_mem.rd == id_ex.rs1 || ex_mem.rd == id_ex.rs2)){
+    if (ex_mem.RegWrite && std::get<1>(memory[current]).rd != 0 && (std::get<1>(memory[current]).rd == std::get<1>(memory[current+1]).rs1 || std::get<1>(memory[current]).rd == std::get<1>(memory[current+1]).rs2)){
+        
         ex_stall = true;
         id_stall = true;
         if_stall = true;
     }
-    if (ex_mem.MemWrite && ex_mem.rd != 0 && (ex_mem.rd == id_ex.rs1 || ex_mem.rd == id_ex.rs2)){
+    if (ex_mem.MemWrite && std::get<1>(memory[current]).rd != 0 && (std::get<1>(memory[current]).rd == std::get<1>(memory[current+1]).rs1 || std::get<1>(memory[current]).rd == std::get<1>(memory[current+1]).rs2)){
+        
         ex_stall = true;
         id_stall = true;
         if_stall = true;
+        
     }
 
     if (ex_mem.MemRead) {
@@ -188,19 +205,25 @@ void Processor::memoryAccess() {
 
     mem_wb.aluResult = ex_mem.aluResult;
     mem_wb.rd = ex_mem.rd;
+    mem_wb.MemWrite = ex_mem.MemWrite;
+    mem_wb.MemRead = ex_mem.MemRead;
     mem_wb.RegWrite = ex_mem.RegWrite;
     mem_wb.MemToReg = ex_mem.MemToReg;
-    entry.PCsrc = ex_mem.Branch && ex_mem.zero;
-    entry.PC2 = ex_mem.pc_imm;
+    mem_wb.pc = ex_mem.pc;
+    mem_wb.pc_imm = ex_mem.pc_imm;
+    mem_wb.instr = ex_mem.instr;
     if (ex_mem.instr.opcode == "JAL") {
         mem_wb.returnAddress = ex_mem.returnAddress; // Pass the return address
+        NOP = true;
     }
-    
+}
+
 
 }
 
 void Processor::writeBack() {
-    
+    if (NOP) NOP = false;
+    else {
     if (mem_wb.RegWrite) {
         if (mem_wb.MemToReg) {
             registers[mem_wb.rd] = mem_wb.memData;
@@ -212,6 +235,15 @@ void Processor::writeBack() {
     else {
         std::cout << "[WB] No writeback operation" << std::endl;
     }
+    
+    if (mem_wb.instr.opcode == "JAL" && mem_wb.RegWrite) {
+        registers[mem_wb.rd] = mem_wb.returnAddress;
+        NOP = true;
+        current = mem_wb.pc_imm / 4;
+        std::cout << "[WB] JAL: Register x" << mem_wb.rd 
+                  << " updated with return address: " << mem_wb.returnAddress << std::endl;
+    }
+    else {
     if (mem_wb.RegWrite && std::get<1>(memory[current]).rd != 0 && (std::get<1>(memory[current]).rd == std::get<1>(memory[current+1]).rs1 || std::get<1>(memory[current]).rd == std::get<1>(memory[current+1]).rs2)){
         mem_stall = true;
         ex_stall = true;
@@ -248,7 +280,37 @@ void Processor::writeBack() {
                 break;
         }
     }
-    else{
+    else if (mem_wb.MemWrite && std::get<1>(memory[current]).rd != 0 && (std::get<1>(memory[current]).rd == std::get<1>(memory[current+1]).rs1 || std::get<1>(memory[current]).rd == std::get<1>(memory[current+1]).rs2)){
+        switch (std::get<1>(memory[current+1]).stage) {
+            case 1:
+            mem_stall = true;
+            ex_stall = true;
+            id_stall = true;
+            if_stall = false;
+            break;
+            case 2:
+            mem_stall = true;
+            ex_stall = true;
+            id_stall = false;
+            if_stall = false;
+            break;
+            case 3:
+            mem_stall = true;
+            ex_stall = false;
+            id_stall = false;
+            if_stall = false;
+            break;
+            case 4:
+            mem_stall = false;
+            ex_stall = false;
+            id_stall = false;
+            if_stall = false;
+            break;
+            default:
+                break;
+        }
+    }
+        else {
         switch (std::get<1>(memory[current+1]).stage) {
             case 1:
             mem_stall = true;
@@ -279,23 +341,23 @@ void Processor::writeBack() {
         }
         
     }
-    if (mem_wb.instr.opcode == "JAL" && mem_wb.RegWrite) {
-        registers[mem_wb.rd] = mem_wb.returnAddress;
-        std::cout << "[WB] JAL: Register x" << mem_wb.rd 
-                  << " updated with return address: " << mem_wb.returnAddress << std::endl;
-    }
+    
     
     current++;
+}
+
+
+}
     
 }
 
-void Processor::run() {
-    while (pc < memory.size() * 4) {
-        std::cout << "--------------------" << std::endl;        
-        fetch();
-        decode();
-        execute();
-        memoryAccess();
-        writeBack();
-    }
-}
+// void Processor::run() {
+//     while (pc < memory.size() * 4) {
+//         std::cout << "--------------------" << std::endl;        
+//         fetch();
+//         decode();
+//         execute();
+//         memoryAccess();
+//         writeBack();
+//     }
+// }
